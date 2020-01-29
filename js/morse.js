@@ -63,42 +63,24 @@ var Morse = {
      * Returns: array of signed 32-bit integers in big-endian order and in two's complement format
      */
     encode: (message) => {
+        // Separa por palabras, pone su binario separado por 000 y los une
         var binCode = String(message).split("").map(x => Morse.alpha[x] + "000").join("")       
-        var binParts = Morse.splitInPieces(binCode)
-        console.log("[encode]> " + message + " = " + binParts.join(""));
-        // 1000100010001000100010001000101000100000000000000000000000000000
-        // 10001000100010001000100010001010
-
+        // Separa en piezas de 32 bits y añade 0 por la derecha al último hasya completar
+        var binParts = Morse.splitInPieces(binCode,32,"0","right")
+        // Para cada parte, lo transforma a número
         var integerArray = binParts.map(x => Morse.binarytwos2signed(x))
-        
-        console.log("[encode]> ------------------------------");
-        console.log(integerArray);
-        console.log(message);
-        console.log("[/ encode]> ------------------------------\n\n\n\n");
-
         return integerArray;
     },
     decode: (integerArray) => {
-
-        var binCodeParts = integerArray.map(x => Morse.splitInPieces(Morse.signed2binarytwos(x),32,"0","left"))
-        console.log(binCodeParts);
-        
-        var binCode = binCodeParts.join("")
-        // 1000 1000 1000 1000 1000 1000 1000 1010100000000000000000000000000000
-    
-        console.log("[DECODE]> " + binCode);
-
-        // separa por espacios (000+0+000 es un espacio) y filtra los vacios
+        // Para cada numero, lo convierte a bin rellenando los 0 que falten por la izda hasta 32 bits
+        var binCode = integerArray.map(x => Morse.splitInPieces(Morse.signed2binarytwos(x), 32, "0", "left")).join("")
+        // separa por espacios (000+0+000 es un espacio) y quita los vacios
         var binPartsWords = binCode.split("0000000").filter(x => x != "" && x != "000") 
         // separa cada palara por letra (000 separa letras)
         var binParts = binPartsWords.map(x => x.split("000"));
         // para cada palabra, itera sus letras y para cada una coge la clave del codigo. 
         // Une las letras (por "") y las palabras (por espacio " ")
         var message = binParts.map(x => x.map(y => Morse.getCharByBin(y)).join("")).join(" ").trim()
-        console.log("[DECODE]> ------------------------------");
-        console.log(integerArray);
-        console.log(message);
-        console.log("[/ DECODE]> ------------------------------\n\n\n\n");
         
         return message
     },
@@ -110,20 +92,18 @@ var Morse = {
     signed2binarytwos: (signed) => {
         return (signed >>> 0).toString(2);
     },
-    splitInPieces : (str, size=32, pad="0", position="right") => {
+    splitInPieces : (str, size=32, pad="0", pad_position="right") => {
         str_a = str.split("")
         
         while (str_a.length % size != 0){
-            if (position == "right") {
+            if (pad_position == "right") {
                 str_a.push(pad)
-            } else if (position == "left") {
+            } else if (pad_position == "left") {
                 str_a.unshift(pad)
             }
 
         }
-        
         var rex = /.{32}/g
-        // var rex = '\/\.\{' + size + '\}\/\g'
         
         return str_a.join("").match(rex);
     },
@@ -134,7 +114,7 @@ var Morse = {
 
 // Morse.encode('HELLO WORLD') === [-1440552402, -1547992901, -1896993141, -1461059584];
 // Morse.decode([-1440552402, -1547992901, -1896993141, -1461059584]) === 'HELLO WORLD';
-Morse.encode('EEEEEEEIE') === [-2004318070, 536870912];
-Morse.decode([-2004318070, 536870912]) === 'EEEEEEEIE';
+// Morse.encode('EEEEEEEIE') === [-2004318070, 536870912];
+// Morse.decode([-2004318070, 536870912]) === 'EEEEEEEIE';
 // Morse.decode([-298086688]) === 'MMM';
 // Morse.decode([3996880608]) === 'MMM';
