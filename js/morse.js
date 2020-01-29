@@ -66,7 +66,8 @@ var Morse = {
         var binCode = String(message).split("").map(x => Morse.alpha[x] + "000").join("")       
         var binParts = Morse.splitInPieces(binCode)
         console.log("[encode]> " + message + " = " + binParts.join(""));
-        //  1000 1000 1000 1000 1000 1000 1000 101000100000000000000000000000000000
+        // 1000100010001000100010001000101000100000000000000000000000000000
+        // 10001000100010001000100010001010
 
         var integerArray = binParts.map(x => Morse.binarytwos2signed(x))
         
@@ -79,7 +80,10 @@ var Morse = {
     },
     decode: (integerArray) => {
 
-        var binCode = integerArray.map(x => Morse.splitInPieces(Morse.signed2binarytwos(x))).join("")
+        var binCodeParts = integerArray.map(x => Morse.splitInPieces(Morse.signed2binarytwos(x),32,"0","left"))
+        console.log(binCodeParts);
+        
+        var binCode = binCodeParts.join("")
         // 1000 1000 1000 1000 1000 1000 1000 1010100000000000000000000000000000
     
         console.log("[DECODE]> " + binCode);
@@ -106,11 +110,17 @@ var Morse = {
     signed2binarytwos: (signed) => {
         return (signed >>> 0).toString(2);
     },
-    splitInPieces : (str, size=32, pad="0") => {
+    splitInPieces : (str, size=32, pad="0", position="right") => {
         str_a = str.split("")
         
-        while (str_a.length % size != 0)
-            str_a.push(pad)
+        while (str_a.length % size != 0){
+            if (position == "right") {
+                str_a.push(pad)
+            } else if (position == "left") {
+                str_a.unshift(pad)
+            }
+
+        }
         
         var rex = /.{32}/g
         // var rex = '\/\.\{' + size + '\}\/\g'
